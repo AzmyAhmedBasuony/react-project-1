@@ -1,0 +1,15 @@
+// PrimeNG Password component full width styles
+.p-password.p-inputwrapper {
+    width: 100% !important;
+    display: block;
+    
+    .p-icon-field {
+        width: 100% !important;
+        display: block;
+        
+        .p-password-input {
+            width: 100% !important;
+            box-sizing: border-box;
+        }
+    }
+}
