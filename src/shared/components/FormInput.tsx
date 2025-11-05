@@ -5,7 +5,7 @@ import { Password } from "primereact/password";
 import { Checkbox } from "primereact/checkbox";
 import { InputTextarea } from "primereact/inputtextarea";
 import { Message } from "primereact/message";
-import "./_Styles.scss";
+import "../../assets/styles/components/_form.scss";
 export type InputType = "text" | "number" | "password" | "checkbox" | "textarea" | "email";
 
 export interface ValidationRule {
