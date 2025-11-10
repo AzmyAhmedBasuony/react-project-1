@@ -10,7 +10,7 @@ export type InputType = "text" | "number" | "password" | "checkbox" | "textarea"
 
 export interface ValidationRule {
     pattern?: RegExp;
-    patternErrorMessage?: string;
+    patternErrorMessage?: string | undefined;
     minLength?: number;
     maxLength?: number;
     min?: number;
