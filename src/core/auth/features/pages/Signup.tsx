@@ -1,7 +1,13 @@
 import { useForm, type SubmitHandler } from "react-hook-form";
 import InputErrorMessage from "../../../../shared/components/InputErrorMessage";
-
-type Inputs = {
+import { type IRegister } from "../../../../controls/interfaces/iregister";
+import { registerForm } from "../../../../controls/forms/resgister";
+import FormLabel from "../../../../shared/components/FormLabel";
+import { registerSchema } from "../../../../controls/validations/register";
+import { yupResolver } from "@hookform/resolvers/yup";
+import axiosInstance from "../../../../config/axios.config";
+import { urls } from "../../../../config/urls";
+export interface Inputs {
   username: string;
   email: string;
   password: string;
@@ -17,76 +23,45 @@ const Signup = () => {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<Inputs>();
+  } = useForm<Inputs>(
+    {
+      resolver: yupResolver(registerSchema),
+    }
+  );
 
-  const onSubmit: SubmitHandler<Inputs> = (data) => {
-    console.log("Signup", data);
+  const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    try {
+      const response = await axiosInstance.post(urls.register, data);
+      console.log("Signup", response.data);
+    } catch (error) {
+      console.error("Signup", error);
+    }
   };
-
+  const registerFormData: IRegister = registerForm;
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
       className="flex flex-col gap-4 max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md"
     >
       <h2 className="text-2xl font-bold mb-4">Register</h2>
-      <input
-        type="text"
-        placeholder="Enter your username"
-        {...register("username", {
-          required: "Username is required",
-          minLength: { value: 3, message: "Minimum 3 characters" },
-          maxLength: { value: 30, message: "Maximum 30 characters" },
-          pattern: {
-            value: /^[a-zA-Z0-9_]+$/,
-            message:
-              "Username should only contain letters, numbers, and underscores",
-          },
-        })}
-        className={inputStyles}
-      />
-      {errors.username && (
-        <InputErrorMessage error={errors.username.message as string} />
-      )}
 
-      <input
-        type="email"
-        placeholder="Enter your email"
-        {...register("email", {
-          required: "Email is required",
-          pattern: {
-            value: /\S+@\S+\.\S+/,
-            message: "Invalid email address",
-          },
-        })}
-        className={inputStyles}
-      />
-      {errors.email && (
-        <InputErrorMessage error={errors.email.message as string} />
-      )}
 
-      <input
-        type="password"
-        placeholder="Enter your password"
-        {...register("password", {
-          required: "Password is required",
-          minLength: { value: 8, message: "Minimum 8 characters" },
-          maxLength: { value: 50, message: "Maximum 50 characters" },
-          pattern: {
-            value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-            message:
-              "Password must contain at least one uppercase letter, one lowercase letter, and one number",
-          },
-        })}
-        className={inputStyles}
-      />
-      {errors.password && (
-        <InputErrorMessage error={errors.password.message as string} />
-      )}
-
-      <input type="submit" value="Register" className={buttonStyles} />
+      {Object.entries(registerFormData).map(([key, value]) => (
+        <div key={key} className="flex flex-col gap-2">
+          <FormLabel htmlFor={key} required={value.required}>{key}</FormLabel>
+          <input
+            type={key}
+            placeholder={key as keyof Inputs}
+            {...register(key as keyof Inputs, value)}
+            className={inputStyles}
+          />
+          {errors[key as keyof Inputs] && (
+            <InputErrorMessage error={errors[key as keyof Inputs]?.message as string} />
+          )}
+        </div>
+      ))}
+      <button type="submit" className={buttonStyles}>Register</button>
     </form>
   );
 };
-
 export default Signup;
-
