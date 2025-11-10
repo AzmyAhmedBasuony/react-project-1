@@ -1,61 +1,84 @@
+import { useForm, type SubmitHandler } from "react-hook-form";
+import InputErrorMessage from "../../../../shared/components/InputErrorMessage";
+import FormLabel from "../../../../shared/components/FormLabel";
+import { yupResolver } from "@hookform/resolvers/yup";
+import axiosInstance from "../../../../config/axios.config";
+import { urls } from "../../../../config/urls";
+import { loginSchema } from "../../../../controls/validations/loginv";
+import type { ILogin } from "../../../../controls/interfaces/ilogin";
+import { loginForm } from "../../../../controls/forms/loginform";
 import { useState } from "react";
-import { FormInput, FormButton } from "../../../../shared/components";
-import type { ValidationRule } from "../../../../shared/components";
+import { useNavigate } from "react-router-dom";
+export interface Inputs {
+    email: string;
+    password: string;
+};
+interface ILoginModel {
+    identifier: string;
+    password: string;
+}
+const inputStyles =
+    "border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition";
+const buttonStyles =
+    "bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700 transition mt-2";
 
 const Login = () => {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-
-    const emailValidation: ValidationRule = {
-        pattern: /\S+@\S+\.\S+/,
-        patternErrorMessage: "Invalid email address",
+    const navigate = useNavigate();
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm<Inputs>(
+        {
+            resolver: yupResolver(loginSchema),
+        }
+    );
+    const [loading, setLoading] = useState(false);
+    const onSubmit: SubmitHandler<Inputs> = async (data) => {
+        setLoading(true);
+        try {
+            const loginModel: ILoginModel = {
+                identifier: data.email,
+                password: data.password,
+            };
+            const response = await axiosInstance.post(urls.login, loginModel);
+            console.log("Login", response.data);
+            localStorage.setItem("token", response.data.jwt);
+            localStorage.setItem("user", JSON.stringify(response.data.user));
+            navigate("/home");
+        } catch (error) {
+            console.error("Login", error);
+        } finally {
+            setLoading(false);
+        }
     };
-
-    const passwordValidation: ValidationRule = {
-        minLength: 6,
-        maxLength: 50,
-    };
-
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        
-        // Validation is handled by FormInput components
-        // If form reaches here without validation errors, proceed with login
-        console.log("Login", { email, password });
-    };
-
+    const loginFormData: ILogin = loginForm;
     return (
-        <div className="flex justify-center items-center mt-10">
-            <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md card">
-                <h2 className="text-2xl font-bold mb-4">Login</h2>
-                <form onSubmit={handleSubmit} noValidate>
-                    <FormInput
-                        type="email"
-                        label="Email"
-                        name="email"
-                        value={email}
-                        onChange={(value) => setEmail(value as string)}
-                        placeholder="Enter your email"
-                        required
-                        validation={emailValidation}
+        <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex flex-col gap-4 max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md"
+        >
+            <h2 className="text-2xl font-bold mb-4">Login</h2>
+
+
+            {Object.entries(loginFormData).map(([key, value]) => (
+                <div key={key} className="flex flex-col gap-2">
+                    <FormLabel htmlFor={key} required={value.required}>{key}</FormLabel>
+                    <input
+                        type={key}
+                        placeholder={key as keyof Inputs}
+                        {...register(key as keyof Inputs, value)}
+                        className={inputStyles}
                     />
-                    <FormInput
-                        type="password"
-                        label="Password"
-                        name="password"
-                        value={password}
-                        onChange={(value) => setPassword(value as string)}
-                        placeholder="Enter your password"
-                        required
-                        validation={passwordValidation}
-                    />
-                    <FormButton type="submit" fullWidth>
-                        Login
-                    </FormButton>
-                </form>
-            </div>
-        </div>
+                    {errors[key as keyof Inputs] && (
+                        <InputErrorMessage error={errors[key as keyof Inputs]?.message as string} />
+                    )}
+                </div>
+            ))}
+            <button type="submit" className={buttonStyles} disabled={loading}>
+                {loading ? "Logging in..." : "Login"}
+            </button>
+        </form>
     );
 };
-
 export default Login;

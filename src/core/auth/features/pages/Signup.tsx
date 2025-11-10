@@ -7,6 +7,7 @@ import { registerSchema } from "../../../../controls/validations/register";
 import { yupResolver } from "@hookform/resolvers/yup";
 import axiosInstance from "../../../../config/axios.config";
 import { urls } from "../../../../config/urls";
+import { useNavigate } from "react-router-dom";
 export interface Inputs {
   username: string;
   email: string;
@@ -19,6 +20,7 @@ const buttonStyles =
   "bg-blue-600 text-white font-semibold py-2 px-4 rounded hover:bg-blue-700 transition mt-2";
 
 const Signup = () => {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -32,7 +34,9 @@ const Signup = () => {
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     try {
       const response = await axiosInstance.post(urls.register, data);
-      console.log("Signup", response.data);
+      if (response.status === 200) {
+        navigate("/login");
+      }
     } catch (error) {
       console.error("Signup", error);
     }

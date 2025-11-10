@@ -5,11 +5,25 @@ export const SpinnerOverlay = () => {
 
   useEffect(() => {
     const handleShowSpinner = () => {
-      setSpinnerCount((prev) => prev + 1);
+      setSpinnerCount((prev) => {
+        const newCount = prev + 1;
+        console.log("Show spinner event received, count:", prev, "->", newCount);
+        return newCount;
+      });
     };
 
-    const handleHideSpinner = () => {
-      setSpinnerCount((prev) => Math.max(0, prev - 1));
+    const handleHideSpinner = (event?: any) => {
+      setSpinnerCount((prev) => {
+        // If the event includes expectedCount and it's 0, reset to 0
+        const expectedCount = event?.detail?.expectedCount;
+        if (expectedCount === 0 && prev > 0) {
+          console.log("Hide spinner event received with expectedCount 0, resetting count from", prev, "to 0");
+          return 0;
+        }
+        const newCount = Math.max(0, prev - 1);
+        console.log("Hide spinner event received, count:", prev, "->", newCount);
+        return newCount;
+      });
     };
 
     window.addEventListener("app:show-spinner", handleShowSpinner);

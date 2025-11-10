@@ -5,13 +5,19 @@ import { environment } from "./environment";
 let spinnerCount = 0;
 const showSpinner = () => {
   spinnerCount++;
+  console.log("showSpinner called, new count:", spinnerCount);
   window.dispatchEvent(new CustomEvent("app:show-spinner"));
 };
 const hideSpinner = () => {
-  spinnerCount = Math.max(0, spinnerCount - 1);
-  if (spinnerCount === 0) {
-    window.dispatchEvent(new CustomEvent("app:hide-spinner"));
+  console.log("hideSpinner called, current count:", spinnerCount);
+  if (spinnerCount > 0) {
+    spinnerCount--;
   }
+  console.log("hideSpinner after decrement, new count:", spinnerCount, "dispatching event");
+  // Always dispatch hide event with the current count - the overlay will handle the counter
+  window.dispatchEvent(new CustomEvent("app:hide-spinner", { 
+    detail: { expectedCount: spinnerCount } 
+  }));
 };
 
 const showToast = (type: "success" | "error", message: string) => {
@@ -45,6 +51,7 @@ axiosInstance.interceptors.request.use(
 
 axiosInstance.interceptors.response.use(
   (response) => {
+    console.log("Response interceptor called, hiding spinner", response.config.url);
     hideSpinner();
     if (
       ["post", "put", "delete"].includes(
@@ -58,6 +65,7 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   (error) => {
+    console.log("Error interceptor called, hiding spinner", error.config?.url);
     hideSpinner();
 
     let errMsg: string = "An error occurred";
